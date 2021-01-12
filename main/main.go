@@ -5,6 +5,8 @@ import (
     "fmt"
     "log"
     "net/http"
+    "database/sql"
+    _ "github.com/lib/pq"
 )
 
 func main() {
@@ -15,5 +17,16 @@ func main() {
 }
 
 func index(w http.ResponseWriter, r *http.Request) {
-	fmt.Fprintf(w, "hello world!")
+    // database setup
+    databaseUrl := os.Getenv("DATABASE_URL")
+    db, oops := sql.Open("postgres", databaseUrl)
+    if oops != nil {
+        panic(oops)
+    }
+    defer db.Close()
+
+    // processing request
+    oops = db.Ping()
+
+	fmt.Fprintf(w, "ping: %s", oops)
 }

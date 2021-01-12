@@ -25,7 +25,7 @@ func TestRootApiCall(t *testing.T) {
 
     rawData, err := ioutil.ReadAll(response.Body)
     data := string(rawData[:])
-    if !strings.Contains(data, "hello") {
+    if !strings.Contains(data, "nil") {
         t.Log("Index post failed, response was: ", data)
         t.Fail()
     }

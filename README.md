@@ -1,3 +1,3 @@
 # Message Queue
 
-Message communication between .
+Message communication between applications.
