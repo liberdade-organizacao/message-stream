@@ -30,3 +30,20 @@ func TestRootApiCall(t *testing.T) {
         t.Fail()
     }
 }
+
+func TestSetup(t *testing.T) {
+    response, err := http.PostForm(rootUrl + "/setup", url.Values{})
+
+    if err != nil {
+        t.Log("Error should be nil")
+        t.Log(err)
+        t.Fail()
+    }
+
+    rawData, err := ioutil.ReadAll(response.Body)
+    data := string(rawData[:])
+    if data != "ok" {
+        t.Log("setup failed, response was: ", data)
+        t.Fail()
+    }
+}
