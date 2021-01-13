@@ -4,6 +4,7 @@ import (
     "os"
     "fmt"
     "log"
+    "errors"
     "strconv"
     "net/http"
     "github.com/liberdade-organizacao/message-queue/database"
@@ -24,8 +25,15 @@ func index(w http.ResponseWriter, r *http.Request) {
 }
 
 func setup(w http.ResponseWriter, r *http.Request) {
+    r.ParseForm()
+    oops := verifySecret(r)
+    if oops != nil {
+        fmt.Fprintf(w, "error: UNAUTHORIZED")
+        return
+    }
+
     databaseUrl := os.Getenv("DATABASE_URL")
-    oops := database.Setup(databaseUrl)
+    oops = database.Setup(databaseUrl)
     if oops == nil {
         fmt.Fprintf(w, "ok")
     } else {
@@ -35,11 +43,17 @@ func setup(w http.ResponseWriter, r *http.Request) {
 
 func newMessage(w http.ResponseWriter, r *http.Request) {
     r.ParseForm()
+    oops := verifySecret(r)
+    if oops != nil {
+        fmt.Fprintf(w, "error: UNAUTHORIZED")
+        return
+    }
+
     kind := r.Form["kind"][0]
     contents := r.Form["content"][0]
 
     databaseUrl := os.Getenv("DATABASE_URL")
-    oops := database.NewMessage(databaseUrl, kind, contents)
+    oops = database.NewMessage(databaseUrl, kind, contents)
 
     if oops == nil {
         fmt.Fprintf(w, "ok")
@@ -50,6 +64,12 @@ func newMessage(w http.ResponseWriter, r *http.Request) {
 
 func getMessages(w http.ResponseWriter, r *http.Request) {
     r.ParseForm()
+    oops := verifySecret(r)
+    if oops != nil {
+        fmt.Fprintf(w, "error: UNAUTHORIZED")
+        return
+    }
+
     kind := r.Form["kind"][0]
     offset, oops := strconv.Atoi(r.Form["offset"][0])
     if oops != nil {
@@ -71,5 +91,15 @@ func getMessages(w http.ResponseWriter, r *http.Request) {
             fmt.Fprintf(w, "content: %s\n", message["content"])
         }
         fmt.Fprintf(w, "...\n")
+    }
+}
+
+func verifySecret(r *http.Request) error {
+    secret := os.Getenv("SECRET")
+    maybeSecret := r.Form["key"][0]
+    if secret == maybeSecret {
+        return nil
+    } else {
+        return errors.New("UNAUTHORIZED")
     }
 }
